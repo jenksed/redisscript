@@ -1,0 +1,246 @@
+#!/usr/bin/perl
+#ssullivan
+#updated from 3.0.1 to 3.0.4 by mwineland
+#updated from 3.0.4 to 3.0.7 by mshooltz on 06/18/2015
+# recipe written by 
+
+our $src_ball = 'redis-3.0.7.tar.gz';
+our $src_url = 'http://layer3.liquidweb.com/scripts/plBake/packages/redis' 
+our $SRCDIR = 'redis-stable';
+our $customMotd = "Redis-3.0.7 is installed on this server via plBake!";
+
+my $date2=`date +%Y%m%d%S`;
+
+if ( -e '/etc/redis/redis_6379.conf' ) {
+	warnM("A redis_6379.conf already exists, Backing this up just in case!");
+	system("mkdir -p /root/plBake/backups");
+	system("cp /etc/redis/redis_6379.conf /root/plBake/backups/redis.conf-plbake-$date2");
+	lightstatusM("The old redis.conf was backed up to /root/plBake/backups/redis.conf-plbake-$date2");
+}
+
+our $FIN_MSG;
+if ( $params{'--install'} ) {
+        $FIN_MSG = "Finished baking Redis; Enjoy.";
+}
+elsif ( $params{'--uninstall'} ) {
+        $FIN_MSG = "Redis has been removed.";
+}
+
+my $centversion = centVer();
+if ( $centversion ge '4' ) {
+	die_log("Sorry, this recipe does not work on CentOS 4 yet.");
+}
+
+my @cmds = ('rpm','sed');
+my $cmdsRef = \@cmds;
+in_path($cmdsRef);
+
+my $date=`date +%Y%m%d`;
+my $chkserv_source = "/etc/chkserv.d/chkservd.conf";
+my $chkserv_dest = $chkserv_source . "_" . $date;
+
+sub do_redis_install
+	do_install();
+
+	statusM("Updating Redis install files.");
+		if ( ! -d '/etc/redis' ) {
+		        system("mkdir /etc/redis");
+		}
+		if ( ! -d '/var/redis/6379' ) {
+				system("mkdir -p /var/redis/6379")
+		}
+		
+		unlink('/etc/chkserv.d/redis_6379');
+		unlink('/etc/init.d/redis_6379');
+		unlink('/etc/redis/6379.conf');
+		system("wget -O /etc/chkserv.d/redis_6379 http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_chkserv > /dev/null 2>&1");
+		system("wget -O /etc/redis/6379.conf http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_conf > /dev/null 2>&1");
+		system("wget -O /etc/init.d/redis_6379 http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_initd > /dev/null 2>&1");
+		
+	unless (-e $chkserv_dest) {
+	  system("cp $chkserv_source $chkserv_dest");
+	}
+
+	if (system("egrep \'^redis_6379:[0-9]\$\' $chkserv_source > /dev/null") eq 256) {
+		  system("echo \"redis_6379:1\" >> $chkserv_source");
+	} else {
+		  system("sed \"s/redis_6379:[0-9]/redis_6379:1/g\" -i $chkserv_source");
+	}
+
+    system("adduser -c 'Redis user' -d /var/redis/ -s /sbin/nologin redis > /dev/null 2>&1");
+
+    system("chown -R redis:root /var/redis > 2>&1");
+    system("chown -R redis:root /etc/redis > 2>&1");
+    system("chmod 600 /etc/redis/redis_6379.conf");
+
+   	statusM("Updating redis_6379.conf...");
+   	system("sed -i 's/daemonize no/daemonize yes/g' /etc/redis/redis_6379.conf > /dev/null 2>&1");
+	if ( $? != 0 ) {
+		die_log("ERROR: ' sed -i 's/daemonize no/daemonize yes/g' /etc/redis/redis_6379.conf ' returned non-zero; got $?");
+	}
+#!/usr/bin/perl
+#ssullivan
+#updated from 3.0.1 to 3.0.4 by mwineland
+#updated from 3.0.4 to 3.0.7 by mshooltz on 06/18/2015
+# recipe written by 
+
+our $src_ball = 'redis-3.0.7.tar.gz';
+our $src_url = 'http://layer3.liquidweb.com/scripts/plBake/packages/redis' 
+our $SRCDIR = 'redis-stable';
+our $customMotd = "Redis-3.0.7 is installed on this server via plBake!";
+
+my $date2=`date +%Y%m%d%S`;
+
+if ( -e '/etc/redis/redis_6379.conf' ) {
+	warnM("A redis_6379.conf already exists, Backing this up just in case!");
+	system("mkdir -p /root/plBake/backups");
+	system("cp /etc/redis/redis_6379.conf /root/plBake/backups/redis.conf-plbake-$date2");
+	lightstatusM("The old redis.conf was backed up to /root/plBake/backups/redis.conf-plbake-$date2");
+}
+
+our $FIN_MSG;
+if ( $params{'--install'} ) {
+        $FIN_MSG = "Finished baking Redis; Enjoy.";
+}
+elsif ( $params{'--uninstall'} ) {
+        $FIN_MSG = "Redis has been removed.";
+}
+
+my $centversion = centVer();
+if ( $centversion ge '4' ) {
+	die_log("Sorry, this recipe does not work on CentOS 4 yet.");
+}
+
+my @cmds = ('rpm','sed');
+my $cmdsRef = \@cmds;
+in_path($cmdsRef);
+
+my $date=`date +%Y%m%d`;
+my $chkserv_source = "/etc/chkserv.d/chkservd.conf";
+my $chkserv_dest = $chkserv_source . "_" . $date;
+
+sub do_redis_install
+	do_install();
+
+	statusM("Updating Redis install files.");
+		if ( ! -d '/etc/redis' ) {
+		        system("mkdir /etc/redis");
+		}
+		if ( ! -d '/var/redis/6379' ) {
+				system("mkdir -p /var/redis/6379")
+		}
+		
+		unlink('/etc/chkserv.d/redis_6379');
+		unlink('/etc/init.d/redis_6379');
+		unlink('/etc/redis/6379.conf');
+		system("wget -O /etc/chkserv.d/redis_6379 http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_chkserv > /dev/null 2>&1");
+		system("wget -O /etc/redis/6379.conf http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_conf > /dev/null 2>&1");
+		system("wget -O /etc/init.d/redis_6379 http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_initd > /dev/null 2>&1");
+		
+	unless (-e $chkserv_dest) {
+	  system("cp $chkserv_source $chkserv_dest");
+	}
+
+	if (system("egrep \'^redis_6379:[0-9]\$\' $chkserv_source > /dev/null") eq 256) {
+		  system("echo \"redis_6379:1\" >> $chkserv_source");
+	} else {
+		  system("sed \"s/redis_6379:[0-9]/redis_6379:1/g\" -i $chkserv_source");
+	}
+
+    system("adduser -c 'Redis user' -d /var/redis/ -s /sbin/nologin redis > /dev/null 2>&1");
+
+    system("chown -R redis:root /var/redis > 2>&1");
+    system("chown -R redis:root /etc/redis > 2>&1");
+    system("chmod 600 /etc/redis/redis_6379.conf");
+
+   	statusM("Updating redis_6379.conf...");
+   	system("sed -i 's/daemonize no/daemonize yes/g' /etc/redis/redis_6379.conf > /dev/null 2>&1");
+	if ( $? != 0 ) {
+		die_log("ERROR: ' sed -i 's/daemonize no/daemonize yes/g' /etc/redis/redis_6379.conf ' returned non-zero; got $?");
+	}
+
+	#!/usr/bin/perl
+#ssullivan
+#updated from 3.0.1 to 3.0.4 by mwineland
+#updated from 3.0.4 to 3.0.7 by mshooltz on 06/18/2015
+# recipe written by 
+
+our $src_ball = 'redis-3.0.7.tar.gz';
+our $src_url = 'http://layer3.liquidweb.com/scripts/plBake/packages/redis' 
+our $SRCDIR = 'redis-stable';
+our $customMotd = "Redis-3.0.7 is installed on this server via plBake!";
+
+my $date2=`date +%Y%m%d%S`;
+
+if ( -e '/etc/redis/redis_6379.conf' ) {
+	warnM("A redis_6379.conf already exists, Backing this up just in case!");
+	system("mkdir -p /root/plBake/backups");
+	system("cp /etc/redis/redis_6379.conf /root/plBake/backups/redis.conf-plbake-$date2");
+	lightstatusM("The old redis.conf was backed up to /root/plBake/backups/redis.conf-plbake-$date2");
+}
+
+our $FIN_MSG;
+if ( $params{'--install'} ) {
+        $FIN_MSG = "Finished baking Redis; Enjoy.";
+}
+elsif ( $params{'--uninstall'} ) {
+        $FIN_MSG = "Redis has been removed.";
+}
+
+my $centversion = centVer();
+if ( $centversion ge '4' ) {
+	die_log("Sorry, this recipe does not work on CentOS 4 yet.");
+}
+
+my @cmds = ('rpm','sed');
+my $cmdsRef = \@cmds;
+in_path($cmdsRef);
+
+my $date=`date +%Y%m%d`;
+my $chkserv_source = "/etc/chkserv.d/chkservd.conf";
+my $chkserv_dest = $chkserv_source . "_" . $date;
+
+sub do_redis_install
+	do_install();
+
+	statusM("Updating Redis install files.");
+		if ( ! -d '/etc/redis' ) {
+		        system("mkdir /etc/redis");
+		}
+		if ( ! -d '/var/redis/6379' ) {
+				system("mkdir -p /var/redis/6379")
+		}
+		
+		unlink('/etc/chkserv.d/redis_6379');
+		unlink('/etc/init.d/redis_6379');
+		unlink('/etc/redis/6379.conf');
+		system("wget -O /etc/chkserv.d/redis_6379 http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_chkserv > /dev/null 2>&1");
+		system("wget -O /etc/redis/6379.conf http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_conf > /dev/null 2>&1");
+		system("wget -O /etc/init.d/redis_6379 http://layer3.liquidweb.com/scripts/plBake/recipes/recipeFiles/redis/redis_initd > /dev/null 2>&1");
+		
+	unless (-e $chkserv_dest) {
+	  system("cp $chkserv_source $chkserv_dest");
+	}
+
+	if (system("egrep \'^redis_6379:[0-9]\$\' $chkserv_source > /dev/null") eq 256) {
+		  system("echo \"redis_6379:1\" >> $chkserv_source");
+	} else {
+		  system("sed \"s/redis_6379:[0-9]/redis_6379:1/g\" -i $chkserv_source");
+	}
+
+    system("adduser -c 'Redis user' -d /var/redis/ -s /sbin/nologin redis > /dev/null 2>&1");
+
+    system("chown -R redis:root /var/redis > 2>&1");
+    system("chown -R redis:root /etc/redis > 2>&1");
+    system("chmod 600 /etc/redis/redis_6379.conf");
+
+   	statusM("Updating redis_6379.conf...");
+   	system("sed -i 's/daemonize no/daemonize yes/g' /etc/redis/redis_6379.conf > /dev/null 2>&1");
+	if ( $? != 0 ) {
+		die_log("ERROR: ' sed -i 's/daemonize no/daemonize yes/g' /etc/redis/redis_6379.conf ' returned non-zero; got $?");
+	}
+http://layer3.liquidweb.com/scripts/plBake/recipes/varnish
+http://layer3.liquidweb.com/scripts/plBake/plBake-functions
+http://layer3.liquidweb.com/scripts/plBake/recipes/java
+	
+	
